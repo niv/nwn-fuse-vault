@@ -15,5 +15,5 @@ Log = Logger.new(STDERR)
 $handler = ServerVaultDirHandler.new(handler)
 
 FuseFS.set_root($handler)
-FuseFS.mount_under ARGV.shift
+FuseFS.mount_under $config['mountpoint']
 FuseFS.run

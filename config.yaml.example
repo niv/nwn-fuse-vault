@@ -1,4 +1,5 @@
 ---
+mountpoint: /path/to/vault
 
 handler: sequel
 
