@@ -16,9 +16,12 @@ class SequelHandler < BaseHandler
   def get_character_list account
     Log.debug("sequel") { "get_character_list: #{account}" }
 
-    Vault.filter(:account => account).all.map do |p|
-      p[:filename]
-    end
+    Vault.
+      filter(:account => account).
+      select(:filename).
+      all.map do |p|
+        p[:filename]
+      end
   end
 
   def get_character_size account, filename
