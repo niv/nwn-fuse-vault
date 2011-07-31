@@ -2,11 +2,3 @@
 mountpoint: /path/to/vault
 
 handler: sequel
-
-database:
-  adapter: postgres
-  host: localhost
-  username: user
-  password: pass
-  database: vault
-  encoding: iso-8859-15

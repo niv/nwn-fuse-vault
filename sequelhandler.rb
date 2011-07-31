@@ -2,7 +2,7 @@ require 'rubygems'
 require 'sequel'
 
 class SequelHandler < BaseHandler
-  DB = Sequel.connect($config['database'])
+  DB = Sequel.connect(YAML.load(IO.read("database.yaml")))
   Vault = DB[:vault]
 
   def get_account_list
