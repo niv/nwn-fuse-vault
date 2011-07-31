@@ -10,7 +10,7 @@ Sequel.migration do
       Time :updated_on
 
       index :account
-      index [:account, :filename]
+      unique [:account, :filename]
     end
   end
 
