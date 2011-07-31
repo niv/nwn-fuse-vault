@@ -16,4 +16,7 @@ $handler = ServerVaultDirHandler.new(handler)
 
 FuseFS.set_root($handler)
 FuseFS.mount_under $config['mountpoint']
+
+trap("INT") { FuseFS.exit }
+trap("QUIT") { FuseFS.exit }
 FuseFS.run
