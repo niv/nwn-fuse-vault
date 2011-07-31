@@ -14,7 +14,6 @@ class ServerVaultDirHandler < FuseFS::FuseDir
   end
 
   def contents path
-    Log.debug "contents(#{path.inspect})"
     clear_cache
 
     case path
@@ -25,13 +24,12 @@ class ServerVaultDirHandler < FuseFS::FuseDir
         @handler.get_character_list($1)
 
       else
+        Log.error("fdir.contents") { "unhandled path: #{path.inspect}" }
         []
       end
   end
 
   def directory? path
-    Log.debug "directory?(#{path.inspect})"
-
     case path
       when "/"
         true
@@ -46,52 +44,49 @@ class ServerVaultDirHandler < FuseFS::FuseDir
   end
 
   def file? path
-    Log.debug "file?(#{path.inspect})"
-
     path =~ RX_CHARACTER
   end
 
   def executable? path
-    Log.debug { "executable(#{path.inspect})" }
     false
   end
 
   def size path
-    Log.debug "size(#{path.inspect})"
-
-    path =~ RX_CHARACTER or return 0
+    path =~ RX_CHARACTER or begin
+      Log.error("fdir.size") { "unhandled path: #{path}" }
+      return 0
+    end
 
     @handler.get_character_size($1, $2)
   end
 
   def read_file path
-    Log.info { "read_file(#{path.inspect})" }
-
-    path =~ RX_CHARACTER or return nil
+    path =~ RX_CHARACTER or begin
+      Log.error("fdir.size") { "unhandled path: #{path}" }
+      return nil
+    end
 
     @handler.load_character($1, $2)
   end
 
   def can_mkdir? path
-    Log.debug { "can_mkdir?(#{path.inspect})" }
     path =~ RX_ACCOUNT
   end
   def can_rmdir? path
-    Log.debug { "can_rmdir?(#{path.inspect})" }
     path =~ RX_ACCOUNT
   end
   def can_write? path
-    Log.debug { "can_write?(#{path.inspect})" }
     path =~ RX_CHARACTER
   end
   def can_delete? path
-    Log.debug { "can_delete?(#{path.inspect})" }
     path =~ RX_CHARACTER
   end
 
   def mkdir path
-    Log.debug { "mkdir(#{path.inspect})" }
-    path =~ RX_ACCOUNT or return
+    path =~ RX_ACCOUNT or begin
+      Log.error("fdir.mkdir") { "unhandled path: #{path}" }
+      return
+    end
     @mkdir_cache[$1] = Time.now
   end
 
@@ -100,24 +95,25 @@ class ServerVaultDirHandler < FuseFS::FuseDir
     # We ignore that here.
     return if data.size == 0
 
-    Log.info { "write_to(#{path.inspect}, sz = #{data.size})" }
-
-    path =~ RX_CHARACTER or return
+    path =~ RX_CHARACTER or begin
+      Log.error("fdir.write_to") { "unhandled path: #{path}" }
+      return
+    end
 
     @handler.save_character($1, $2, data)
   end
 
   def rmdir path
-    Log.debug { "rmdir(#{path.inspect})" }
-    # No action needed
-  end
-  def delete path
-    Log.debug { "delete(#{path.inspect})" }
-    path =~ RX_CHARACTER or return
-    @handler.delete_character($1, $2)
+    path =~ RX_ACCOUNT or return
+    @mkdir_cache.delete($1)
   end
 
-  def touch path
-    Log.debug { "touch(#{path.inspect})" }
+  def delete path
+    path =~ RX_CHARACTER or begin
+      Log.error("fdir.delete") { "unhandled path: #{path}" }
+      return
+    end
+
+    @handler.delete_character($1, $2)
   end
 end
