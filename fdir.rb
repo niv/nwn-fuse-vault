@@ -70,19 +70,24 @@ class ServerVaultDirHandler < FuseFS::FuseDir
   end
 
   def can_mkdir? path
-    path =~ RX_ACCOUNT
+    !READONLY && path =~ RX_ACCOUNT
   end
   def can_rmdir? path
-    path =~ RX_ACCOUNT
+    !READONLY && path =~ RX_ACCOUNT
   end
   def can_write? path
-    path =~ RX_CHARACTER
+    !READONLY && path =~ RX_CHARACTER
   end
   def can_delete? path
-    path =~ RX_CHARACTER
+    !READONLY && path =~ RX_CHARACTER
   end
 
   def mkdir path
+    READONLY and begin
+      Log.warn("fdir.mkdir") { "ignoring due to RO: #{path}" }
+      return
+    end
+
     path =~ RX_ACCOUNT or begin
       Log.error("fdir.mkdir") { "unhandled path: #{path}" }
       return
@@ -95,6 +100,11 @@ class ServerVaultDirHandler < FuseFS::FuseDir
     # We ignore that here.
     return if data.size == 0
 
+    READONLY and begin
+      Log.warn("fdir.write_to") { "ignoring due to RO: #{path}" }
+      return
+    end
+
     path =~ RX_CHARACTER or begin
       Log.error("fdir.write_to") { "unhandled path: #{path}" }
       return
@@ -104,11 +114,21 @@ class ServerVaultDirHandler < FuseFS::FuseDir
   end
 
   def rmdir path
+    READONLY and begin
+      Log.warn("fdir.rmdir") { "ignoring due to RO: #{path}" }
+      return
+    end
+
     path =~ RX_ACCOUNT or return
     @mkdir_cache.delete($1)
   end
 
   def delete path
+    READONLY and begin
+      Log.warn("fdir.delete") { "ignoring due to RO: #{path}" }
+      return
+    end
+
     path =~ RX_CHARACTER or begin
       Log.error("fdir.delete") { "unhandled path: #{path}" }
       return

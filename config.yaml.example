@@ -1,4 +1,6 @@
 ---
 mountpoint: /path/to/vault
 
+readonly: true
+
 handler: sequel
