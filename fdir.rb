@@ -18,7 +18,7 @@ class ServerVaultDirHandler < FuseFS::FuseDir
 
     case path
       when "/"
-        @handler.get_account_list + @mkdir_cache.keys
+        []
 
       when RX_ACCOUNT
         @handler.get_character_list($1)

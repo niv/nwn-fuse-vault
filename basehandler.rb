@@ -1,8 +1,4 @@
 class BaseHandler
-  def get_account_list
-    []
-  end
-
   def get_character_list account
     []
   end
@@ -17,6 +13,7 @@ class BaseHandler
 
   def save_character account, filename, data
   end
+
   def delete_character account, filename
   end
 end
