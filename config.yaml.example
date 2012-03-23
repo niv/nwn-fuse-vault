@@ -1,6 +1,8 @@
 ---
 mountpoint: /path/to/vault
 
+allow-account-list: false
+
 readonly: true
 
 handler: sequel

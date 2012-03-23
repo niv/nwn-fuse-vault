@@ -5,6 +5,14 @@ class SequelHandler < BaseHandler
   DB = Sequel.connect(YAML.load(IO.read("database.yaml")))
   Vault = DB[:vault]
 
+  def get_account_list
+    Log.debug("sequel") { "get_account_list" }
+
+    Vault.select(:account).distinct.all.map do |a|
+      a[:account]
+    end
+  end
+
   def get_character_list account
     Log.debug("sequel") { "get_character_list: #{account}" }
 

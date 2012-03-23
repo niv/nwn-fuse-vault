@@ -18,7 +18,11 @@ class ServerVaultDirHandler < FuseFS::FuseDir
 
     case path
       when "/"
-        []
+        if $config['allow-account-list']
+          @handler.get_account_list
+        else
+          []
+        end
 
       when RX_ACCOUNT
         @handler.get_character_list($1)

@@ -1,4 +1,8 @@
 class BaseHandler
+  def get_account_list
+    []
+  end
+
   def get_character_list account
     []
   end
