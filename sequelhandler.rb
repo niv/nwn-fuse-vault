@@ -32,7 +32,7 @@ class SequelHandler < BaseHandler
       select { length(:data) }.
       first
 
-    char[:length]
+    char.values[0]
   end
 
   def load_character account, filename
