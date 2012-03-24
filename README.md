@@ -4,6 +4,9 @@ What's this?
 nwn-fuse-vault emulates a servervault, abstracting character load and save
 into callbacks.
 
+Please note that this is BETA quality and just may eat your characters.
+Pay close attention to the charset in your database configuration.
+
 Usage
 -----
 
