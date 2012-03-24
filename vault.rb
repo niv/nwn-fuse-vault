@@ -3,6 +3,7 @@ require 'logger'
 require 'yaml'
 require 'fdir'
 require 'basehandler'
+require 'basemeta'
 
 $config = YAML.load(IO.read("config.yaml")).freeze
 
@@ -18,6 +19,10 @@ end
 
 handler = Object.const_get($config['handler'].capitalize + 'Handler').new
 
+metalist = $config['meta'].map do |m|
+  require m + 'meta.rb'
+  Object.const_get(m.capitalize + 'Meta').new
+end
 
 $handler = ServerVaultDirHandler.new(handler)
 

@@ -6,3 +6,5 @@ allow-account-list: false
 readonly: true
 
 handler: sequel
+
+meta: []

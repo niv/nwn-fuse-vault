@@ -1,9 +1,12 @@
 class ServerVaultDirHandler < FuseFS::FuseDir
-  RX_ACCOUNT = %r{^/([^/]+)$}
+  RX_ACCOUNT   = %r{^/([^/]+)$}
   RX_CHARACTER = %r{^/([^/]+?)/(.+?\.bic)$}
+  RX_ACC_META  = %r{^/([^/]+?)/(.+?)\.meta$}
+  RX_CHR_META  = %r{^/([^/]+?)/(.+?\.bic)\.(.+?)\.bicmeta$}
 
-  def initialize handler
+  def initialize handler, meta
     @handler = handler
+    @meta = meta
     @mkdir_cache = {}
   end
 
@@ -25,12 +28,17 @@ class ServerVaultDirHandler < FuseFS::FuseDir
         end
 
       when RX_ACCOUNT
-        @handler.get_character_list($1)
-
+        cl = @handler.get_character_list($1)
+        cl + @meta.inject([]) {|i, m|
+            i + m.get_meta_account_list($1).map {|n| n + ".meta" } +
+              cl.inject([]) {|k, c|
+                k + m.get_meta_character_list($1, c).map {|nn| c + "." + nn + ".bicmeta" }
+              }
+          }
       else
         Log.error("fdir.contents") { "unhandled path: #{path.inspect}" }
         []
-      end
+    end
   end
 
   def directory? path
@@ -48,29 +56,54 @@ class ServerVaultDirHandler < FuseFS::FuseDir
   end
 
   def file? path
-    path =~ RX_CHARACTER
+    path =~ RX_CHARACTER ||
+      path =~ RX_ACC_META ||
+      path =~ RX_CHR_META
   end
 
   def executable? path
     false
   end
 
-  def size path
-    path =~ RX_CHARACTER or begin
-      Log.error("fdir.size") { "unhandled path: #{path}" }
-      return 0
-    end
+  def find_account_meta(account, file)
+    @meta.select {|m| m.get_meta_account_list(account).index(file) }[0]
+  end
+  def find_character_meta(account, character, file)
+    @meta.select {|m| m.get_meta_character_list(account, character).index(file) }[0]
+  end
 
-    @handler.get_character_size($1, $2)
+  def size path
+    case path
+      when RX_CHARACTER
+        @handler.get_character_size($1, $2)
+
+      when RX_ACC_META
+        find_account_meta($1, $2).get_meta_account_size($1, $2)
+      
+      when RX_CHR_META
+        find_character_meta($1, $2, $3).get_meta_character_size($1, $2, $3)
+
+      else
+        Log.error("fdir.size") { "unhandled path: #{path}" }
+        return 0
+    end
   end
 
   def read_file path
-    path =~ RX_CHARACTER or begin
-      Log.error("fdir.size") { "unhandled path: #{path}" }
-      return nil
-    end
+    case path
+      when RX_CHARACTER
+        @handler.load_character($1, $2)
 
-    @handler.load_character($1, $2)
+      when RX_ACC_META
+        find_account_meta($1, $2).get_meta_account_content($1, $2)
+      
+      when RX_CHR_META
+        find_character_meta($1, $2, $3).get_meta_character_content($1, $2, $3)
+
+      else
+        Log.error("fdir.size") { "unhandled path: #{path}" }
+        return nil
+    end
   end
 
   def can_mkdir? path
