@@ -24,9 +24,10 @@ metalist = $config['meta'].map do |m|
   Object.const_get(m.capitalize + 'Meta').new
 end
 
-$handler = ServerVaultDirHandler.new(handler)
+$handler = handler
+fusehandler = ServerVaultDirHandler.new(handler, metalist)
 
-FuseFS.set_root($handler)
+FuseFS.set_root(fusehandler)
 FuseFS.mount_under $config['mountpoint']
 
 def shutdown
