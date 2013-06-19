@@ -4,4 +4,4 @@ host: localhost
 username: user
 password: pass
 database: vault
-encoding: iso-8859-15
+encoding: windows-1252

@@ -1,40 +1,38 @@
-require 'fusefs'
+require 'rubygems'
+require 'bundler/setup'
 require 'logger'
 require 'yaml'
-require 'fdir'
-require 'basehandler'
-require 'basemeta'
-
-$config = YAML.load(IO.read("config.yaml")).freeze
+# gems
+require 'rfuse'
 
 Log = Logger.new(STDERR)
 
-require $config['handler'] + 'handler.rb'
+require_relative 'lib/fuse_handler'
+require_relative 'lib/basehandler'
 
-READONLY = $config['readonly'] != false
+Thread.abort_on_exception = true
 
-if READONLY
-  Log.warn { "running in readonly mode" }
-end
+$config = YAML.load(IO.read(File.dirname(__FILE__) + "/config.yaml")).freeze
 
+require_relative $config['handler'] + 'handler.rb'
 handler = Object.const_get($config['handler'].capitalize + 'Handler').new
 
-metalist = $config['meta'].map do |m|
-  require m + 'meta.rb'
-  Object.const_get(m.capitalize + 'Meta').new
-end
-
 $handler = handler
-fusehandler = ServerVaultDirHandler.new(handler, metalist)
+fusehandler = NWNFuseFS.new(handler, Process.uid, Process.gid)
+fo = RFuse::FuseDelegator.new(fusehandler, $config['mountpoint'])
 
-FuseFS.set_root(fusehandler)
-FuseFS.mount_under $config['mountpoint']
+if fo.mounted?
+	Log.info "Mounted, entering fuse loop. Press Ctrl+C to exit"
 
-def shutdown
-  Log.warn { "shutdown, please wait" }
-  FuseFS.exit
+	Signal.trap("TERM") { print "Caught TERM\n" ; fo.exit }
+	Signal.trap("INT") { print "Caught INT\n"; fo.exit }
+
+	begin
+		fo.loop
+	rescue
+		Log.error "Error:" + $!.inspect
+	ensure
+		fo.unmount if fo.mounted?
+		Log.info "Unmounted #{ARGV[0]}\n"
+	end
 end
-
-trap("INT") { shutdown }
-trap("QUIT") { shutdown }
-FuseFS.run

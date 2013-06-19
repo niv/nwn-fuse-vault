@@ -1,3 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'daemons'
 
-ruby -rubygems vault.rb
+Daemons.run('vault.rb', :log_output => true)

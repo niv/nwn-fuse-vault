@@ -4,19 +4,5 @@
 # It's usually nwserver/servervault/.
 mountpoint: /path/to/vault
 
-# Allow listing of all accounts (eg ls servervault/).
-# This is a potentially expensive operation if your vault is big
-# and your shell is recursing a lot, and not needed
-# for nwserver to function. Use it for debugging only.
-allow-account-list: false
-
-# Turn this vault into readonly mode. No writes will be allowed.
-readonly: true
-
 # The handler to use. Looks for (name)handler.rb.
 handler: sequel
-
-# A list of meta handlers that provide additional information/tools
-# in each account directory. nwn-fuse-vault looks for (name)meta.rb
-# for each entry given here. See basemeta.rb for more information.
-meta: []
